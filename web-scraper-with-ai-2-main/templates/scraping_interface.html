@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags and title -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Scraping and Text Processing</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Inline styles for JSON rendering -->
+    <style>
+        .json-container {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+            overflow: auto;
+            max-height: 600px;
+        }
+        .json-key {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .json-value {
+            margin-left: 10px;
+            color: #212529;
+        }
+        .json-item {
+            margin-left: 20px;
+            border-left: 2px solid #dee2e6;
+            padding-left: 10px;
+            margin-bottom: 5px;
+        }
+        .json-array-index {
+            color: #6c757d;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm rounded">
+            <div class="container-fluid">
+                <a href="{{ url_for('config_page') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-cog"></i> Go to Config Page
+                </a>
+                <button id="theme-toggle" class="btn btn-secondary">
+                    <i class="fas fa-adjust"></i> Toggle Dark Mode
+                </button>
+            </div>
+        </nav>
+
+        <!-- Page Title -->
+        <h1 class="text-center mb-4">
+            <i class="fas fa-file-alt"></i> Web Scraping and Text Processing
+        </h1>
+
+        <!-- Main Content Row -->
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6">
+                <!-- Form Card -->
+                <div class="card shadow-sm mb-5">
+                    <div class="card-body p-4">
+                        <form id="web-scraping-form" action="{{ url_for('scraping_interface') }}" method="POST">
+                            <!-- Query Field -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-search"></i> Query
+                                </label>
+                                <input class="form-control" type="text" name="query" placeholder="Enter search query" required>
+                            </div>
+
+                            <!-- Search Engine Selection -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-search-engine"></i> Search Engine
+                                </label>
+                                <select class="form-select" name="search_engine" required>
+                                    <option value="google">Google</option>
+                                    <option value="bing">Bing</option>
+                                    <option value="duckduckgo">DuckDuckGo</option>
+                                    <option value="baidu">Baidu</option>
+                                    <option value="yahoo">Yahoo</option>
+                                    <option value="yandex">Yandex</option>
+                                    <option value="ask">Ask</option>
+                                </select>
+                            </div>
+
+                            <!-- Number of Pages -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-list-ol"></i> Number of Pages
+                                </label>
+                                <input class="form-control" type="number" name="num_pages" min="1" placeholder="Enter number of pages to scrape" required>
+                            </div>
+
+                            <!-- Recursion Depth -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-layer-group"></i> Recursion Depth
+                                </label>
+                                <input class="form-control" type="number" name="recursion_depth" min="0" placeholder="Enter recursion depth level" required>
+                            </div>
+                            
+                            <!-- Enable GPT Flag -->
+                            <div class="mb-4">
+                                <label class="form-check-label fw-bold">
+                                    <input class="form-check-input" type="checkbox" name="enable_gpt" id="enable-gpt">
+                                    <i class="fas fa-robot"></i> Enable GPT Processing
+                                </label>
+                            </div>
+
+                            <!-- Enable GPT Flag -->
+                            <div class="mb-4">
+                                <label class="form-check-label fw-bold">
+                                    <input class="form-check-input" type="checkbox" name="model_2" id="enable-model-2">
+                                    <i class="fas fa-robot"></i> Enable model 2 of scraping
+                                </label>
+                            </div>
+                            
+                            <!-- GPT Recursion Depth -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-sync-alt"></i> Numero di Ricorsioni GPT
+                                </label>
+                                <input class="form-control" type="number" name="gpt_recursion_depth" min="0"  placeholder="Inserisci il numero di ricorsioni GPT" required>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="mb-3 text-center">
+                                <button id="start-scraping-button" type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-play-circle"></i> Start Scraping
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Scraping Result -->
+                {% if result %}
+                    <div id="scraping-result" class="alert alert-info mt-3 position-relative">
+                        <button class="btn-close position-absolute top-0 end-0 m-3" onclick="this.parentElement.classList.add('d-none');"></button>
+                        <h5><i class="fas fa-file-alt"></i> Scraping Result</h5>
+                        <pre>{{ result }}</pre>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-md-6">
+                {% if gpt_json %}
+                    <div id="gpt-json-output" class="alert alert-success mt-3 position-relative">
+                        <button class="btn-close position-absolute top-0 end-0 m-3" onclick="this.parentElement.classList.add('d-none');"></button>
+                        <h5><i class="fas fa-code"></i> GPT JSON Output</h5>
+                        <div class="json-container">
+                            {% macro render_json(data) %}
+                                {% if data is mapping %}
+                                    <div class="json-item">
+                                        {% for key, value in data.items() %}
+                                            <div>
+                                                <span class="json-key">{{ key }}:</span>
+                                                {{ render_json(value) }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% elif data is sequence and data is not string %}
+                                    <div class="json-item">
+                                        {% for item in data %}
+                                            <div>
+                                                <span class="json-array-index">[{{ loop.index0 }}]</span>
+                                                {{ render_json(item) }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="json-value">{{ data }}</span>
+                                {% endif %}
+                            {% endmacro %}
+                            {{ render_json(gpt_json) }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay">
+        <img src="{{ url_for('static', filename='loading.gif') }}" alt="Caricamento...">
+    </div>
+    <!-- Custom Script -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <!-- Footer -->
+    <footer class="footer text-center mt-5 py-4">
+        <div class="container">
+            <p class="h5">
+                <strong>
+                    <i class="fas fa-project-diagram"></i> Web Scraping Project
+                </strong>
+            </p>
+            <p>This project allows you to perform recursive web scraping on various search engines.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const forms = document.querySelectorAll("form");
+    
+            forms.forEach(form => {
+                form.addEventListener("submit", function() {
+                    // Mostra l'overlay di caricamento quando il form viene inviato
+                    document.getElementById("loading-overlay").style.display = "block";
+                });
+            });
+    
+            // Nascondi l'overlay di caricamento quando la pagina ha completato il caricamento
+            window.addEventListener("load", function() {
+                document.getElementById("loading-overlay").style.display = "none";
+            });
+        });
+    </script>
+    
+    
+    
+    <style>
+        /* Stile per l'overlay di caricamento */
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    
+        /* Stile per l'immagine di caricamento */
+        #loading-overlay img {
+            width: 50%;          /* Rende l'immagine più piccola del 50% della dimensione originale */
+            max-width: 100px;     /* Limita la larghezza massima a 100px */
+            position: absolute;   /* Posiziona l'immagine al centro del contenitore */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centro esatto */
+        }
+    </style>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

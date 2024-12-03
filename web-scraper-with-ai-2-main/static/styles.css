@@ -1,0 +1,202 @@
+/* styles.css */
+:root {
+    --bg-color-light: #ececec;
+    --bg-color-dark: #2c2c2c;
+    --text-color-light: #333333;
+    --text-color-dark: #ffffff;
+    --button-bg-light: #3273dc;
+    --button-bg-dark: #209cee;
+    --border-color-light: #ddd;
+    --border-color-dark: #444;
+    --notification-bg: #00d1b2;
+    --notification-text: #ffffff;
+}
+
+body {
+    background: linear-gradient(135deg, var(--bg-color-light), #ffffff);
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color-light);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Correzione qui: usa body.dark-mode invece di .dark-mode body */
+body.dark-mode {
+    background: linear-gradient(135deg, var(--bg-color-dark), #000000);
+    color: var(--text-color-dark);
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+/* Correzione qui */
+body.dark-mode .container {
+    background: #333;
+    color: var(--text-color-dark);
+    border: 1px solid var(--border-color-dark);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: var(--button-bg-light);
+}
+
+/* Correzione qui */
+body.dark-mode .title {
+    color: var(--button-bg-dark);
+}
+
+.field-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #4a4a4a;
+}
+
+/* Correzione qui */
+body.dark-mode .field-label {
+    color: var(--text-color-dark);
+}
+
+.input,
+.select select,
+.textarea {
+    border: 2px solid var(--border-color-light);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+body.dark-mode .input,
+body.dark-mode .select select,
+body.dark-mode .textarea {
+    border-color: var(--border-color-dark);
+    background: #444;
+    color: var(--text-color-dark);
+}
+
+.input:focus,
+.select select:focus,
+.textarea:focus {
+    border-color: var(--button-bg-light);
+    box-shadow: 0 0 5px rgba(50, 115, 220, 0.3);
+}
+
+body.dark-mode .input:focus,
+body.dark-mode .select select:focus,
+body.dark-mode .textarea:focus {
+    border-color: var(--button-bg-dark);
+    box-shadow: 0 0 5px rgba(20, 140, 240, 0.3);
+}
+
+.button {
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.button:hover {
+    background-color: var(--button-bg-light);
+    transform: translateY(-2px);
+}
+
+body.dark-mode .button:hover {
+    background-color: var(--button-bg-dark);
+}
+
+.notification {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.notification.is-visible {
+    opacity: 1;
+    background-color: var(--notification-bg);
+    color: var(--notification-text);
+}
+
+.output-box {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid var(--border-color-light);
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    max-height: 400px;
+    overflow-y: auto;
+    animation: fadeIn 1s;
+}
+
+body.dark-mode .output-box {
+    border-color: var(--border-color-dark);
+    background-color: #555;
+    color: var(--text-color-dark);
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.file-icons {
+    display: flex;
+    flex-direction: column; /* Stack files vertically */
+}
+
+.file-icon-container {
+    display: flex;
+    align-items: center;
+    margin: 10px 0; /* Space between file entries */
+}
+
+.file-icon {
+    width: 24px; /* Adjust size as needed */
+    height: auto;
+    margin-right: 10px;
+}
+
+.toggle-preview {
+    margin-left: auto; /* Push button to the right */
+}
+
+.preview {
+    margin-left: 34px; /* Indent preview to align with the file icon */
+    padding-top: 5px; /* Space above preview */
+    display: none; /* Initially hidden */
+}
+
+.footer {
+    background-color: white; /* White background */
+    padding: 2rem 1.5rem; /* Padding for spacing */
+    margin-top: 2rem; /* Space above the footer */
+    border-top: 1px solid #ccc; /* Subtle border on top */
+}
+
+body.dark-mode .footer {
+    background-color: #222; /* Scuro per la modalità scura */
+    color: var(--text-color-dark);
+}
+
+.footer .content {
+    max-width: 800px; /* Limit width for readability */
+    margin: auto; /* Center align */
+}
+
+.footer a {
+    color: #3273dc; /* Bulma link color */
+    text-decoration: none; /* Remove underline */
+}
+
+.footer a:hover {
+    text-decoration: underline; /* Underline on hover */
+}

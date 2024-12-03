@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurazione</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container my-4">
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm rounded">
+            <div class="container-fluid">
+                <a class="btn btn-primary" href="{{ url_for('index') }}">
+                    <i class="fas fa-home"></i> Torna alla Home
+                </a>
+                <button id="theme-toggle" class="btn btn-secondary ms-auto">
+                    <i class="fas fa-adjust"></i> Toggle Dark Mode
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Heading -->
+        <h1 class="mb-4 text-center">
+            <i class="fas fa-cogs"></i> Configurazione
+        </h1>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Chiudi"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Configuration Form -->
+        <div class="card shadow-sm mb-5">
+            <div class="card-body">
+                <form id="config-form" action="{{ url_for('config_page') }}" method="POST">
+                    <!-- GPT API URL -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-link"></i> GPT API URL
+                        </label>
+                        <input type="text" class="form-control" name="GPT_API_URL" value="{{ config.GPT_API_URL }}" required>
+                    </div>
+                    <!-- GPT API Key -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-key"></i> GPT API Key
+                        </label>
+                        <input type="password" class="form-control" name="GPT_API_KEY" value="{{ config.GPT_API_KEY }}" required>
+                    </div>
+                    <!-- Ollama API URL -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-link"></i> Ollama API URL
+                        </label>
+                        <input type="text" class="form-control" name="OLLAMA_API_URL" value="{{ config.OLLAMA_API_URL }}">
+                    </div>
+                    <!-- Cohere API URL -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-link"></i> Cohere API URL
+                        </label>
+                        <input type="text" class="form-control" name="COHERE_API_URL" value="{{ config.COHERE_API_URL }}">
+                    </div>
+                    <!-- Cohere API Key -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-key"></i> Cohere API Key
+                        </label>
+                        <input type="password" class="form-control" name="COHERE_API_KEY" value="{{ config.COHERE_API_KEY }}">
+                    </div>
+                    <!-- Cohere Model -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-cogs"></i> Cohere Model
+                        </label>
+                        <input type="text" class="form-control" name="COHERE_MODEL" value="{{ config.COHERE_MODEL }}">
+                    </div>
+                    <!-- Output File Path -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-file-alt"></i> Output File Path
+                        </label>
+                        <input type="text" class="form-control" name="OUTPUT_FILE_PATH" value="{{ config.OUTPUT_FILE_PATH }}">
+                    </div>
+                    <!-- Search Engines -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-search"></i> Motori di Ricerca
+                        </label>
+                        <div id="search-engines">
+                            {% for name, url in config.SEARCH_ENGINES.items() %}
+                                <div class="input-group mb-2 search-engine-entry">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control me-2" name="search_engine_name[]" value="{{ name }}" placeholder="Nome" required>
+                                    <input type="text" class="form-control me-2" name="search_engine_url[]" value="{{ url }}" placeholder="URL" required>
+                                    <button type="button" class="btn btn-danger remove-search-engine">
+                                        <i class="fas fa-trash-alt"></i> Rimuovi
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-search-engine" class="btn btn-info">
+                            <i class="fas fa-plus-circle"></i> Aggiungi Motore di Ricerca
+                        </button>
+                    </div>
+                    <!-- Save Configuration Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-save"></i> Salva Configurazione
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer text-center py-3">
+        <div class="container">
+            <span>&copy; {{ current_year }} webscraperai. Tutti i diritti riservati.</span>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

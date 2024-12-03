@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrape and Process UI</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm rounded">
+            <div class="container-fluid">
+                <a href="{{ url_for('config_page') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-cog"></i> Config Page
+                </a>
+                <a href="{{ url_for('discussion_page') }}" class="btn btn-success me-2">
+                    <i class="fas fa-comments"></i> Chatbot Discussion
+                </a>
+                <a href="{{ url_for('generate_maps') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-cog"></i> Map Generator
+                </a>
+                
+                
+                <a href="{{ url_for('discussion_page_full') }}" class="btn btn-success me-2">
+                    <i class="fas fa-comments"></i> Chatbot Discussion full
+                </a>
+                <!-- Nuovo pulsante per Text Comparison -->
+                <a href="{{ url_for('text_comparison_page') }}" class="btn btn-warning me-auto">
+                    <i class="fas fa-align-left"></i> Text Comparison
+                </a>
+                <a href="{{ url_for('scraping_interface') }}" class="btn btn-warning me-auto">
+                    <i class="fas fa-align-left"></i> scraping interface
+                </a>
+                <button id="theme-toggle" class="btn btn-secondary">
+                    <i class="fas fa-adjust"></i> Toggle Dark Mode
+                </button>
+            </div>
+        </nav>
+        
+
+        <!-- Main Heading -->
+        <h1 class="text-center mb-4">
+            <i class="fas fa-tools"></i> Scrape and Process
+        </h1>
+
+        <!-- Process Form -->
+        <div class="card shadow-sm mb-5">
+            <div class="card-body p-4">
+                <form id="process-form" action="{{ url_for('process') }}" method="POST" enctype="multipart/form-data">
+                    <!-- Process Type -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-tasks"></i> Process Type
+                        </label>
+                        <div class="ms-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="process_type" value="audio">
+                                <label class="form-check-label">
+                                    <i class="fas fa-microphone"></i> Audio Recording
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="process_type" value="web">
+                                <label class="form-check-label">
+                                    <i class="fas fa-globe"></i> Web Search
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="process_type" value="file" checked>
+                                <label class="form-check-label">
+                                    <i class="fas fa-file-alt"></i> File Processing
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Query -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-search"></i> Query
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-keyboard"></i>
+                            </span>
+                            <input class="form-control" type="text" name="query" placeholder="Enter your query" value="{{ request.form.get('query', '') }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Languages -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-language"></i> Languages
+                        </label>
+                        <select class="form-select" name="languages" multiple required>
+                            {% for lang in languages %}
+                                <option value="{{ lang }}" {% if lang in request.form.getlist('languages') %}selected{% endif %}>{{ lang }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            Hold down the Ctrl (Windows) or Command (Mac) button to select multiple options.
+                        </small>
+                    </div>
+
+                    <!-- AI Model (Multiple Selection) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-robot"></i> AI Model
+                        </label>
+                        <select class="form-select" name="model" multiple required>
+                            <option value="Ollama" {% if 'Ollama' in request.form.getlist('model') %}selected{% endif %}>Ollama</option>
+                            <option value="Cohere" {% if 'Cohere' in request.form.getlist('model') %}selected{% endif %}>Cohere</option>
+                            <option value="GPT" {% if 'GPT' in request.form.getlist('model') %}selected{% endif %}>GPT</option>
+                            <option value="Gemini" {% if 'Gemini' in request.form.getlist('model') %}selected{% endif %}>Gemini</option> <!-- Aggiunto Gemini -->
+                        </select>
+                        <small class="form-text text-muted">
+                            Hold down the Ctrl (Windows) or Command (Mac) button to select multiple options.
+                        </small>
+                    </div>
+
+                    <!-- Web Search Options -->
+                    <div id="web-search-options" class="mb-4" style="display: none;">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-list-ol"></i> Number of Pages
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-file-alt"></i>
+                            </span>
+                            <input class="form-control" type="number" name="numero_pagine" value="{{ request.form.get('numero_pagine', 1) }}" min="1" required>
+                        </div>
+                        <label class="form-label fw-bold mt-3">
+                            <i class="fas fa-search"></i> Search Engines
+                        </label>
+                        <div id="search-engines" class="ms-3">
+                            {% for name, url in search_engines.items() %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="search_engines" value="{{ name }}" {% if name in request.form.getlist('search_engines') %}checked{% endif %}>
+                                    <label class="form-check-label">
+                                        <i class="fas fa-search"></i> {{ name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- File Upload Option -->
+                    <div id="file-upload-option" class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-file-upload"></i> Upload File
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <input class="form-control" type="file" name="file" accept=".xlsx,.docx" required>
+                        </div>
+                    </div>
+
+                    <!-- Audio Recording Option -->
+                    <div id="audio-recording-option" class="mb-4" style="display: none;">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-microphone"></i> Audio Recording
+                        </label>
+                        <button id="record-button" class="btn btn-primary" type="button">
+                            <i class="fas fa-microphone-alt"></i> Start Recording
+                        </button>
+                        <p id="recording-status" class="mt-2">
+                            <i class="fas fa-stop-circle"></i> Not recording
+                        </p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="mb-3 text-center">
+                        <button id="process-button" type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-cogs"></i> Process
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div id="result" class="alert alert-info d-none mt-3 position-relative">
+            <button class="btn-close position-absolute top-0 end-0 m-3"></button>
+            <p id="result-message"></p>
+            <pre id="result-output"></pre>
+        </div>
+    </div>
+
+
+    <div id="loading-overlay">
+        <img src="{{ url_for('static', filename='loading.gif') }}" alt="Caricamento...">
+    </div>
+    <!-- Custom Script -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <!-- Footer -->
+    <footer class="footer text-center mt-5 py-4">
+        <div class="container">
+            <p class="h5">
+                <strong>
+                    <i class="fas fa-project-diagram"></i> Web Scraping and AI Analysis Project
+                </strong>
+            </p>
+            <p>
+                This project allows you to extract and analyze information from web pages and files using various AI models and search engines.
+            </p>
+            <h5>
+                <i class="fas fa-tools"></i> Getting Started:
+            </h5>
+            <ul class="list-unstyled">
+                <li>
+                    <i class="fas fa-code-branch"></i> Clone the repository and install dependencies.
+                </li>
+                <li>
+                    <i class="fas fa-cog"></i> Configure API keys in <code>config.py</code>.
+                </li>
+                <li>
+                    <i class="fas fa-play-circle"></i> Run the application with <code>python app.py</code>.
+                </li>
+            </ul>
+            <p>
+                Ensure a stable internet connection and verify all services are accessible.
+                <br>
+                Respect the terms of service of any websites you scrape.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS (Optional if you have interactive components) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const forms = document.querySelectorAll("form");
+
+        forms.forEach(form => {
+            form.addEventListener("submit", function() {
+                // Mostra l'overlay di caricamento quando il form viene inviato
+                document.getElementById("loading-overlay").style.display = "block";
+            });
+        });
+
+        // Nascondi l'overlay di caricamento quando la pagina ha completato il caricamento
+        window.addEventListener("load", function() {
+            document.getElementById("loading-overlay").style.display = "none";
+        });
+    });
+</script>
+
+
+
+<style>
+    /* Stile per l'overlay di caricamento */
+    #loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Stile per l'immagine di caricamento */
+    #loading-overlay img {
+        width: 50%;          /* Rende l'immagine più piccola del 50% della dimensione originale */
+        max-width: 100px;     /* Limita la larghezza massima a 100px */
+        position: absolute;   /* Posiziona l'immagine al centro del contenitore */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); /* Centro esatto */
+    }
+</style>

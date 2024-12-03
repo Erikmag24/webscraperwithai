@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Discussion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm rounded">
+            <div class="container-fluid">
+                <a href="{{ url_for('config_page') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-cog"></i> Go to Config Page
+                </a>
+                <button id="theme-toggle" class="btn btn-secondary">
+                    <i class="fas fa-adjust"></i> Toggle Dark Mode
+                </button>
+            </div>
+        </nav>
+
+        <h1 class="text-center mb-4">
+            <i class="fas fa-comments"></i> Chatbot Discussion
+        </h1>
+
+        <div class="card shadow-sm mb-5">
+            <div class="card-body p-4">
+                <form id="discussion-form" action="{{ url_for('discussion_page') }}" method="POST" enctype="multipart/form-data">
+                    <!-- Query -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-search"></i> Query
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-keyboard"></i>
+                            </span>
+                            <input class="form-control" type="text" name="query" placeholder="Enter your query" value="{{ request.form.get('query', '') }}">
+                        </div>
+                    </div>
+
+                    <!-- File Upload Option -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-file-upload"></i> Upload File
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <input class="form-control" type="file" name="file" accept=".txt,.pdf,.docx,.xlsx">
+                        </div>
+                    </div>
+
+                    <!-- Number of Cycles -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-redo"></i> Number of Cycles
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-hashtag"></i>
+                            </span>
+                            <input class="form-control" type="number" name="cycles" min="1" value="{{ request.form.get('cycles', 3) }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Chatbot Instances -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-robot"></i> Chatbot Instances
+                        </label>
+                        <div id="chatbot-instances" class="ms-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="chatbots" value="gpt" {% if 'gpt' in request.form.getlist('chatbots') %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="fas fa-brain"></i> GPT
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="chatbots" value="ollama" {% if 'ollama' in request.form.getlist('chatbots') %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="fas fa-comment-dots"></i> Ollama
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="chatbots" value="cohere" {% if 'cohere' in request.form.getlist('chatbots') %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="fas fa-link"></i> Cohere
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="chatbots" value="gemini" {% if 'gemini' in request.form.getlist('chatbots') %}checked{% endif %}>
+                                <label class="form-check-label">
+                                    <i class="fas fa-gem"></i> Gemini
+                                </label>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle"></i> Select one or more chatbots to participate in the discussion.
+                        </small>
+                    </div>
+
+                    <!-- Summary Chatbot -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-sum"></i> Summary Chatbot
+                        </label>
+                        <select class="form-select" name="summary_bot" required>
+                            <option value="" disabled selected>Select a chatbot for summary</option>
+                            <option value="gpt" {% if 'gpt' == request.form.get('summary_bot') %}selected{% endif %}>GPT</option>
+                            <option value="ollama" {% if 'ollama' == request.form.get('summary_bot') %}selected{% endif %}>Ollama</option>
+                            <option value="cohere" {% if 'cohere' == request.form.get('summary_bot') %}selected{% endif %}>Cohere</option>
+                            <option value="gemini" {% if 'gemini' == request.form.get('summary_bot') %}selected{% endif %}>Gemini</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="mb-3 text-center">
+                        <button id="start-discussion-button" type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play-circle"></i> Start Discussion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sezione per Visualizzare i Risultati della Discussione -->
+        {% if summary and conversation %}
+            <div id="discussion-result" class="alert alert-info mt-3 position-relative">
+                <button class="btn-close position-absolute top-0 end-0 m-3" onclick="this.parentElement.classList.add('d-none');"></button>
+                <h5><i class="fas fa-file-alt"></i> Summary</h5>
+                <pre>{{ summary }}</pre>
+                <h5><i class="fas fa-comments"></i> Full Conversation</h5>
+                <pre>{{ conversation | join('\n') }}</pre>
+            </div>
+        {% endif %}
+    </div>
+
+    <div id="loading-overlay">
+        <img src="{{ url_for('static', filename='loading.gif') }}" alt="Caricamento...">
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <footer class="footer text-center mt-5 py-4">
+        <div class="container">
+            <p class="h5">
+                <strong>
+                    <i class="fas fa-project-diagram"></i> Web Scraping and AI Analysis Project
+                </strong>
+            </p>
+            <p>This project allows you to extract and analyze information from web pages and files using various AI models and search engines.</p>
+            <h5>
+                <i class="fas fa-tools"></i> Getting Started:
+            </h5>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-code-branch"></i> Clone the repository and install dependencies.</li>
+                <li><i class="fas fa-cog"></i> Configure API keys in <code>config.py</code>.</li>
+                <li><i class="fas fa-play-circle"></i> Run the application with <code>python app.py</code>.</li>
+            </ul>
+            <p>
+                Ensure a stable internet connection and verify all services are accessible.<br>
+                Respect the terms of service of any websites you scrape.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const forms = document.querySelectorAll("form");
+
+        forms.forEach(form => {
+            form.addEventListener("submit", function() {
+                // Mostra l'overlay di caricamento quando il form viene inviato
+                document.getElementById("loading-overlay").style.display = "block";
+            });
+        });
+
+        // Nascondi l'overlay di caricamento quando la pagina ha completato il caricamento
+        window.addEventListener("load", function() {
+            document.getElementById("loading-overlay").style.display = "none";
+        });
+    });
+</script>
+
+
+
+<style>
+    /* Stile per l'overlay di caricamento */
+    #loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Stile per l'immagine di caricamento */
+    #loading-overlay img {
+        width: 50%;          /* Rende l'immagine più piccola del 50% della dimensione originale */
+        max-width: 100px;     /* Limita la larghezza massima a 100px */
+        position: absolute;   /* Posiziona l'immagine al centro del contenitore */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); /* Centro esatto */
+    }
+</style>
+</body>
+</html>
+

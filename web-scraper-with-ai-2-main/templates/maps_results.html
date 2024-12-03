@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags and title -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Map Generator</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 shadow-sm rounded">
+            <div class="container-fluid">
+                <a href="#" class="navbar-brand">
+                    <i class="fas fa-map-marked-alt"></i> Map Generator
+                </a>
+                <button id="theme-toggle" class="btn btn-secondary">
+                    <i class="fas fa-adjust"></i> Toggle Dark Mode
+                </button>
+            </div>
+        </nav>
+
+        <!-- Page Title -->
+        <h1 class="text-center mb-4">
+            <i class="fas fa-globe"></i> Generate Satellite Maps
+        </h1>
+
+        <!-- Form Card -->
+        <div class="card shadow-sm mb-5">
+            <div class="card-body p-4">
+                <form id="map-generator-form" action="/generate_maps" method="POST">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="useAzure" name="use_azure" value="True" {% if request.form.get('use_azure') %}checked{% endif %}>
+                        <label class="form-check-label" for="useAzure">
+                            <i class="fas fa-cloud"></i> Use Azure
+                        </label>
+                    </div>
+                    
+                    <!-- Latitude Center -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-map-marker-alt"></i> Latitude Center
+                        </label>
+                        <input type="number" step="any" class="form-control" name="lat_center" required>
+                    </div>
+
+                    <!-- Longitude Center -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-map-marker-alt"></i> Longitude Center
+                        </label>
+                        <input type="number" step="any" class="form-control" name="lon_center" required>
+                    </div>
+
+                    <!-- Area Width (meters) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-ruler-horizontal"></i> Area Width (meters)
+                        </label>
+                        <input type="number" step="any" class="form-control" name="area_width_m" required>
+                    </div>
+
+                    <!-- Area Height (meters) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-ruler-vertical"></i> Area Height (meters)
+                        </label>
+                        <input type="number" step="any" class="form-control" name="area_height_m" required>
+                    </div>
+
+                    <!-- Zoom Level -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-search-plus"></i> Zoom Level
+                        </label>
+                        <input type="number" class="form-control" name="zoom_level" required>
+                    </div>
+
+                    <!-- Map Width (pixels) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-arrows-alt-h"></i> Map Width (pixels)
+                        </label>
+                        <input type="number" class="form-control" name="map_width_px" required>
+                    </div>
+
+                    <!-- Map Height (pixels) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-arrows-alt-v"></i> Map Height (pixels)
+                        </label>
+                        <input type="number" class="form-control" name="map_height_px" required>
+                    </div>
+
+                    <!-- Chatbot Choice -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-robot"></i> Select Chatbot
+                        </label>
+                        <select class="form-select" name="chatbot_choice" required>
+                            <option value="gpt">GPT</option>
+                            <option value="ollama">Ollama</option>
+                            <option value="cohere">Cohere</option>
+                            <option value="gemini">Gemini</option>
+                        </select>
+                    </div>
+
+                    <!-- Prompt Template -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-keyboard"></i> Prompt Template
+                        </label>
+                        <textarea class="form-control" name="prompt_template" rows="3" placeholder="Enter your prompt template (use {image_path})" required></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play-circle"></i> Generate Maps
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        {% if results %}
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="text-center">
+                    <i class="fas fa-image"></i> Results
+                </h2>
+                <ul class="list-group">
+                    {% for image, output in results.items() %}
+                    <li class="list-group-item">
+                        <img src="{{ image }}" alt="Map Tile" class="img-fluid mb-2" style="max-width: 200px;">
+                        <p><strong>Output:</strong> {{ output }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
